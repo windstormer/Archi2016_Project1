@@ -5,20 +5,22 @@
 
 int reg[32];
 int PC;
+int PC_start;
 unsigned char ii[1024];
 unsigned char di[1024];
 int sp[256];
+int spn;
 int iim[256];
 unsigned char dim[256];
 
 unsigned char cut_rs(int a)
 {
-unsigned char back;
+    unsigned char back;
     a<<=6;
     back=(unsigned)a>>27;
 
-printf("%x ",back);
-return back;
+    printf("%x ",back);
+    return back;
 }
 unsigned char cut_rt(int a)
 {
@@ -26,8 +28,8 @@ unsigned char cut_rt(int a)
     a<<=11;
     back=(unsigned)a>>27;
 
-printf("%x ",back);
-return back;
+    printf("%x ",back);
+    return back;
 }
 unsigned char cut_rd(int a)
 {
@@ -35,8 +37,8 @@ unsigned char cut_rd(int a)
     a<<=16;
     back=(unsigned)a>>27;
 
-printf("%x ",back);
-return back;
+    printf("%x ",back);
+    return back;
 }
 unsigned char cut_shamt(int a)
 {
@@ -44,8 +46,8 @@ unsigned char cut_shamt(int a)
     a<<=21;
     back=(unsigned)a>>27;
 
-printf("%x ",back);
-return back;
+    printf("%x ",back);
+    return back;
 }
 unsigned char cut_func(int a)
 {
@@ -53,8 +55,8 @@ unsigned char cut_func(int a)
     a<<=26;
     back=(unsigned)a>>27;
 
-printf("%x ",back);
-return back;
+    printf("%x ",back);
+    return back;
 }
 unsigned short cut_immediate(int a)
 {
@@ -62,8 +64,8 @@ unsigned short cut_immediate(int a)
     a<<=16;
     back=(unsigned)a>>16;
 
-printf("%x ",back);
-return back;
+    printf("%x ",back);
+    return back;
 }
 unsigned int cut_address(int a)
 {
@@ -71,8 +73,17 @@ unsigned int cut_address(int a)
     a<<=6;
     back=(unsigned)a>>6;
 
-printf("%x ",back);
-return back;
+    printf("%x ",back);
+    return back;
+}
+
+int extend_immediate(unsigned short a)
+{
+    int x = (int)a;
+    x<<=16;
+    (unsigned)x>>16;
+
+    return (int)x;
 }
 
 
@@ -90,6 +101,14 @@ int combine(unsigned char a,unsigned char b,unsigned char c,unsigned char d)
     return back;
 
 }
+short combine_two(unsigned char a, unsigned char b)
+{
+    short back=0;
+    back |= a;
+    back <<= 8;
+    back |= b;
+    return back;
+}
 
 int main(void)
 {
@@ -101,7 +120,7 @@ int main(void)
 
     long sdimage=0,siimage=0;
     int sdata=0,sins=0;
-
+    int spn=0;
     int i,j;
 
     memset(reg,0,sizeof(reg));
@@ -139,6 +158,7 @@ int main(void)
     }
 
     PC=combine(ii[0],ii[1],ii[2],ii[3]);
+    PC_start=PC;
     sins=combine(ii[4],ii[5],ii[6],ii[7]);
 
     for(i=0; i<sins; i++)
@@ -170,6 +190,7 @@ int main(void)
     unsigned short immediate=0;
     unsigned int address=0;
 
+    int read=0;
 
     int flag=0;
     i=0;
@@ -180,251 +201,324 @@ int main(void)
         printf("%x ",op);
         switch(op)
         {
-case 0x00:
+        case 0x00:
+        {
+            funct=cut_func(iim[i]);
+            switch(funct)
             {
-                funct=cut_func(iim[i]);
-                switch(funct)
-                {
-                case 0x20:
-                    {
-                        rs=cut_rs(iim[i]);
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        break;
-                    }
-                case 0x21:
-                    {
-                        rs=cut_rs(iim[i]);
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        break;
-                    }
-                case 0x22:
-                    {
-                        rs=cut_rs(iim[i]);
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        break;
-                    }
-                case 0x24:
-                    {
-                        rs=cut_rs(iim[i]);
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        break;
-                    }
-                case 0x25:
-                    {
-                        rs=cut_rs(iim[i]);
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        break;
-                    }
-                case 0x26:
-                    {
-                        rs=cut_rs(iim[i]);
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        break;
-                    }
-                case 0x27:
-                    {
-                        rs=cut_rs(iim[i]);
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        break;
-                    }
-                case 0x28:
-                    {
-                        rs=cut_rs(iim[i]);
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        break;
-                    }
-                case 0x2A:
-                    {
-                        rs=cut_rs(iim[i]);
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        break;
-                    }
-                case 0x00:
-                    {
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        shamt=cut_shamt(iim[i]);
-                        break;
-                    }
-                case 0x02:
-                    {
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        shamt=cut_shamt(iim[i]);
-                        break;
-                    }
-                case 0x03:
-                    {
-                        rt=cut_rt(iim[i]);
-                        rd=cut_rd(iim[i]);
-                        shamt=cut_shamt(iim[i]);
-                        break;
-                    }
-                case 0x08:
-                    {
-                        rs=cut_rs(iim[i]);
-                        break;
-                    }
+            case 0x20:
+            {
+                rs=cut_rs(iim[i]);
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                reg[rd]=reg[rs]+reg[rt];    ///need overflow detect
+                PC+=4;
+                break;
+            }
+            case 0x21:
+            {
+                rs=cut_rs(iim[i]);
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                reg[rd]=reg[rs]+reg[rt];
+                PC+=4;
+                break;
+            }
+            case 0x22:
+            {
+                rs=cut_rs(iim[i]);
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                reg[rd]=reg[rs]-reg[rt];
+                PC+=4;
+                break;
+            }
+            case 0x24:
+            {
+                rs=cut_rs(iim[i]);
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                reg[rd]=reg[rs]&reg[rt];
+                PC+=4;
+                break;
+            }
+            case 0x25:
+            {
+                rs=cut_rs(iim[i]);
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                reg[rd]=reg[rs]|reg[rt];
+                PC+=4;
+                break;
+            }
+            case 0x26:
+            {
+                rs=cut_rs(iim[i]);
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                reg[rd]=reg[rs]^reg[rt];
+                PC+=4;
+                break;
+            }
+            case 0x27:
+            {
+                rs=cut_rs(iim[i]);
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                reg[rd]=~(reg[rs]|reg[rt]);
+                PC+=4;
+                break;
+            }
+            case 0x28:
+            {
+                rs=cut_rs(iim[i]);
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                reg[rd]=~(reg[rs]&reg[rt]);
+                PC+=4;
+                break;
+            }
+            case 0x2A:
+            {
+                rs=cut_rs(iim[i]);
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                if(reg[rs]<reg[rt])reg[rd]=1;
+                else reg[rd]=0;
+                PC+=4;
+                break;
+            }
+            case 0x00:
+            {
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                shamt=cut_shamt(iim[i]);
+                reg[rd]=reg[rt]<<shamt;
+                PC+=4;
+                break;
+            }
+            case 0x02:
+            {
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                shamt=cut_shamt(iim[i]);
+                reg[rd]=(unsigned)reg[rt]>>shamt;
+                PC+=4;
+                break;
+            }
+            case 0x03:
+            {
+                rt=cut_rt(iim[i]);
+                rd=cut_rd(iim[i]);
+                shamt=cut_shamt(iim[i]);
+                reg[rd]=reg[rt]>>shamt;
+                PC+=4;
+                break;
+            }
+            case 0x08:
+            {
+                rs=cut_rs(iim[i]);
+                PC=reg[rs];
+                break;
+            }
 
-                }
-                break;
             }
-case 0x08:
+            break;
+        }
+        case 0x08:
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            reg[rt]=reg[rs]+(int)immediate;      ///need overflow detect
+            PC+=4;
+            break;
+        }
+        case 0x09:
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            reg[rt]=reg[rs]+(int)immediate;
+            PC+=4;
+            break;
+        }
+        case 0x23:
+        {
+
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            if(rs!=0x1D)                    ///if rs == sp then take from sp[]
             {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x09:
+            read= reg[rs]+(int)immediate;  ///need overflow detect && data misaligned
+            reg[rt]=combine(dim[read],dim[read+1],dim[read+2],dim[read+3]);
+            }else
             {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
+                reg[rt]=sp[spn];
+                sp[spn]=0;
+                spn--;
             }
-case 0x23:
+            PC+=4;
+            break;
+        }
+        case 0x21:
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            read= reg[rs]+(int)immediate;  ///need overflow detect && data misaligned
+            reg[rt]=combine_two(dim[read],dim[read+1]);
+            PC+=4;
+            break;
+        }
+        case 0x25:
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            read= reg[rs]+(int)immediate;  ///need overflow detect && data misaligned
+            reg[rt]=(unsigned)combine_two(dim[read],dim[read+1]);
+            PC+=4;
+            break;
+        }
+        case 0x20:
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            read= reg[rs]+(int)immediate;  ///need overflow detect && data misaligned
+            reg[rt]=dim[read];
+            PC+=4;
+            break;
+        }
+        case 0x24:
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            read= reg[rs]+(int)immediate;  ///need overflow detect && data misaligned
+            reg[rt]=(unsigned)dim[read];
+            PC+=4;
+            break;
+        }
+        case 0x2B:      ///haven't done
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            if(rs!=0x1D)
             {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x21:
+
+            }else
             {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
+                sp[spn]=reg[rt];
+                spn++;
             }
-case 0x25:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x20:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x24:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x2B:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x29:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x28:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x0F:
-            {
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x0C:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x0D:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x0E:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x0A:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x04:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x05:
-            {
-                rs=cut_rs(iim[i]);
-                rt=cut_rt(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x07:
-            {
-                rs=cut_rs(iim[i]);
-                immediate=cut_immediate(iim[i]);
-                break;
-            }
-case 0x02:
-            {
-                address=cut_address(iim[i]);
-                break;
-            }
-case 0x03:
-            {
-                address=cut_address(iim[i]);
-                break;
-            }
-case 0x3F:
-            {
-                printf("halt\n");
-                flag=1;
-                break;
-            }
+            break;
+        }
+        case 0x29:      ///haven't done
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            break;
+        }
+        case 0x28:      ///haven't done
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            break;
+        }
+        case 0x0F:
+        {
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            reg[rt]=immediate<<16;
+            PC+=4;
+            break;
+        }
+        case 0x0C:
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            reg[rt]=reg[rs]&immediate;
+            PC+=4;
+            break;
+        }
+        case 0x0D:
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            reg[rt]=reg[rs]|immediate;
+            PC+=4;
+            break;
+        }
+        case 0x0E:
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            reg[rt]=~(reg[rs]|immediate);
+            PC+=4;
+            break;
+        }
+        case 0x0A:
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            if(reg[rs]<(short)immediate) reg[rt]=1;
+            else reg[rt]=0;
+            PC+=4;
+            break;
+        }
+        case 0x04:      ///haven't done
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            break;
+        }
+        case 0x05:      ///haven't done
+        {
+            rs=cut_rs(iim[i]);
+            rt=cut_rt(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            break;
+        }
+        case 0x07:      ///haven't done
+        {
+            rs=cut_rs(iim[i]);
+            immediate=cut_immediate(iim[i]);
+            break;
+        }
+        case 0x02:      ///haven't done
+        {
+            address=cut_address(iim[i]);
+            break;
+        }
+        case 0x03:      ///haven't done
+        {
+            address=cut_address(iim[i]);
+            break;
+        }
+        case 0x3F:
+        {
+            printf("halt\n");
+            flag=1;
+            break;
+        }
 
 
         }
 
         i++;
 
-printf("\n");
+        printf("\n");
 
 
         if(flag==1) break;
