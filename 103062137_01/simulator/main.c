@@ -19,7 +19,7 @@ unsigned char cut_rs(int a)
     a<<=6;
     back=(unsigned)a>>27;
 
-    printf("%x ",back);
+   // printf("%x ",back);
     return back;
 }
 unsigned char cut_rt(int a)
@@ -28,7 +28,7 @@ unsigned char cut_rt(int a)
     a<<=11;
     back=(unsigned)a>>27;
 
-    printf("%x ",back);
+   // printf("%x ",back);
     return back;
 }
 unsigned char cut_rd(int a)
@@ -37,7 +37,7 @@ unsigned char cut_rd(int a)
     a<<=16;
     back=(unsigned)a>>27;
 
-    printf("%x ",back);
+   // printf("%x ",back);
     return back;
 }
 unsigned char cut_shamt(int a)
@@ -46,16 +46,16 @@ unsigned char cut_shamt(int a)
     a<<=21;
     back=(unsigned)a>>27;
 
-    printf("%x ",back);
+    //printf("%x ",back);
     return back;
 }
 unsigned char cut_func(int a)
 {
     unsigned char back;
     a<<=26;
-    back=(unsigned)a>>27;
+    back=(unsigned)a>>26;
 
-    printf("%x ",back);
+   // printf("%x ",back);
     return back;
 }
 unsigned short cut_immediate(int a)
@@ -64,7 +64,7 @@ unsigned short cut_immediate(int a)
     a<<=16;
     back=(unsigned)a>>16;
 
-    printf("%x ",back);
+    //printf("%x ",back);
     return back;
 }
 unsigned int cut_address(int a)
@@ -73,7 +73,7 @@ unsigned int cut_address(int a)
     a<<=6;
     back=(unsigned)a>>6;
 
-    printf("%x ",back);
+    //printf("%x ",back);
     return back;
 }
 
@@ -109,6 +109,47 @@ short combine_two(unsigned char a, unsigned char b)
     back |= b;
     return back;
 }
+
+unsigned char* seperate(int in)
+{
+    unsigned char* back;
+    back=(unsigned char*)malloc(sizeof(unsigned char)*4);
+    int a,b,c,d;
+    a=in,b=in,c=in,d=in;
+    a>>24;
+    b<<8;
+    (unsigned)b>>24;
+    c<<16;
+    (unsigned)c>>24;
+    d<<24;
+    (unsigned)d>>24;
+    back[0]=(unsigned char)a;
+    back[1]=(unsigned char)b;
+    back[2]=(unsigned char)c;
+    back[3]=(unsigned char)d;
+
+    return back;
+}
+unsigned char* seperate_two(int in)
+{
+    unsigned char* back;
+    back=(unsigned char*)malloc(sizeof(char)*2);
+
+    in&=0x0000FFFF;
+
+    int c,d;
+    c=in,d=in;
+
+    c<<16;
+    (unsigned)c>>24;
+    d<<24;
+    (unsigned)d>>24;
+    back[0]=(unsigned char)c;
+    back[1]=(unsigned char)d;
+
+    return back;
+}
+
 
 int main(void)
 {
@@ -164,6 +205,7 @@ int main(void)
     for(i=0; i<sins; i++)
     {
         iim[i]=combine(ii[8+i*4],ii[9+i*4],ii[10+i*4],ii[11+i*4]);
+      //  printf("i=%d %x\n",i,iim[i]);
     }
     /*
     for(i=0;i<sins;i++)
@@ -191,14 +233,17 @@ int main(void)
     unsigned int address=0;
 
     int read=0;
-
+    unsigned char *getting;
+    getting = (unsigned char*)malloc(sizeof(unsigned char)*4);
     int flag=0;
-    i=0;
+    i=1;
     while(i<sins)
     {
+        //printf("i:%d   ",i);
         op=(unsigned)iim[i]>>26;
-        printf("%x ",iim[i]);
-        printf("%x ",op);
+        //printf("%x ",iim[i]);
+        //printf("%x ",op);
+        printf("  PC:%x",PC);
         switch(op)
         {
         case 0x00:
@@ -402,33 +447,48 @@ int main(void)
             PC+=4;
             break;
         }
-        case 0x2B:      ///haven't done
+        case 0x2B:
         {
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rs!=0x1D)
             {
-
+                getting=seperate(reg[rt]);
+                read= reg[rs]+(int)immediate;   ///need overflow detect && data misaligned
+                dim[read]=getting[0];
+                dim[read+1]=getting[1];
+                dim[read+2]=getting[2];
+                dim[read+3]=getting[3];
             }else
             {
                 sp[spn]=reg[rt];
                 spn++;
             }
+            PC+=4;
             break;
         }
-        case 0x29:      ///haven't done
+        case 0x29:
         {
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
+            getting=seperate_two(reg[rt]);
+            read= reg[rs]+(int)immediate;   ///need overflow detect && data misaligned
+            dim[read]=getting[0];
+            dim[read+1]=getting[1];
+            PC+=4;
             break;
         }
-        case 0x28:      ///haven't done
+        case 0x28:
         {
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
+            getting[0]=(unsigned char)(reg[rt]&0x000000FF);
+            read= reg[rs]+(int)immediate;   ///need overflow detect && data misaligned
+            dim[read]=getting[0];
+            PC+=4;
             break;
         }
         case 0x0F:
@@ -476,34 +536,64 @@ int main(void)
             PC+=4;
             break;
         }
-        case 0x04:      ///haven't done
+        case 0x04:
         {
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
+            if(reg[rs]==reg[rt])
+            {
+                read=(int)immediate*4+4;        ///need overflow detect
+                PC+=read;
+            }
+            else PC+=4;
             break;
         }
-        case 0x05:      ///haven't done
+        case 0x05:
         {
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
+            if(reg[rs]!=reg[rt])
+            {
+                read=(int)immediate*4+4;        ///need overflow detect
+                PC+=read;
+            }
+            else PC+=4;
             break;
         }
-        case 0x07:      ///haven't done
+        case 0x07:
         {
             rs=cut_rs(iim[i]);
             immediate=cut_immediate(iim[i]);
+            if(reg[rs]>0)
+            {
+                read=(int)immediate*4+4;        ///need overflow detect
+                PC+=read;
+            }
+            else PC+=4;
             break;
         }
-        case 0x02:      ///haven't done
+        case 0x02:
         {
             address=cut_address(iim[i]);
+            address<<=2;
+            PC+=4;
+            PC=(unsigned)PC>>28;
+            PC=PC<<28;
+            PC=(unsigned)PC|address;
             break;
         }
-        case 0x03:      ///haven't done
+        case 0x03:
         {
             address=cut_address(iim[i]);
+            address<<=2;
+            PC+=4;
+            reg[31]=PC;
+
+            PC=(unsigned)PC>>28;
+            PC=PC<<28;
+            PC=(unsigned)PC|address;
             break;
         }
         case 0x3F:
@@ -516,11 +606,12 @@ int main(void)
 
         }
 
-        i++;
+        i=(PC-PC_start)/4;
+
 
         printf("\n");
 
-
+        free(getting);
         if(flag==1) break;
     }
 
