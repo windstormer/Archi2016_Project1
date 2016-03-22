@@ -8,8 +8,6 @@ int PC;
 int PC_start;
 unsigned char ii[1024];
 unsigned char di[1024];
-int sp[256];
-int spn;
 int iim[256];
 unsigned char dim[256];
 
@@ -58,11 +56,11 @@ unsigned char cut_func(int a)
    // printf("%x ",back);
     return back;
 }
-unsigned short cut_immediate(int a)
+short cut_immediate(int a)
 {
-    unsigned short back;
+    short back;
     a<<=16;
-    back=(unsigned)a>>16;
+    back=a>>16;
 
     //printf("%x ",back);
     return back;
@@ -101,9 +99,9 @@ int combine(unsigned char a,unsigned char b,unsigned char c,unsigned char d)
     return back;
 
 }
-short combine_two(unsigned char a, unsigned char b)
+unsigned short combine_two(unsigned char a, unsigned char b)
 {
-    short back=0;
+    unsigned short back=0;
     back |= a;
     back <<= 8;
     back |= b;
@@ -116,13 +114,14 @@ unsigned char* seperate(int in)
     back=(unsigned char*)malloc(sizeof(unsigned char)*4);
     int a,b,c,d;
     a=in,b=in,c=in,d=in;
-    a>>24;
-    b<<8;
-    (unsigned)b>>24;
-    c<<16;
-    (unsigned)c>>24;
-    d<<24;
-    (unsigned)d>>24;
+
+    a=(unsigned)a>>24;
+    b=b<<8;
+    b=(unsigned)b>>24;
+    c=c<<16;
+    c=(unsigned)c>>24;
+    d=d<<24;
+    d=(unsigned)d>>24;
     back[0]=(unsigned char)a;
     back[1]=(unsigned char)b;
     back[2]=(unsigned char)c;
@@ -140,10 +139,10 @@ unsigned char* seperate_two(int in)
     int c,d;
     c=in,d=in;
 
-    c<<16;
-    (unsigned)c>>24;
-    d<<24;
-    (unsigned)d>>24;
+    c=c<<16;
+    c=(unsigned)c>>24;
+    d=d<<24;
+    d=(unsigned)d>>24;
     back[0]=(unsigned char)c;
     back[1]=(unsigned char)d;
 
@@ -153,10 +152,11 @@ unsigned char* seperate_two(int in)
 
 int main(void)
 {
-    FILE *iimage = fopen("../../archiTA/testcase/open_testcase/func/iimage.bin","rb");
-    FILE *dimage = fopen("../../archiTA/testcase/open_testcase/func/dimage.bin","rb");
+    FILE *iimage = fopen("../../archiTA/testcase/open_testcase/branch/iimage.bin","rb");
+    FILE *dimage = fopen("../../archiTA/testcase/open_testcase/branch/dimage.bin","rb");
 //FILE *error = fopen("../../archiTA/testcase/open_testcase/func/errormessage.rpt","w");
-//FILE *snapshot = fopen("../../archiTA/testcase/open_testcase/func/snap.rpt","w");
+    FILE *snapshot = fopen("../../archiTA/testcase/open_testcase/branch/snap.rpt","w");
+
 
 
     long sdimage=0,siimage=0;
@@ -169,7 +169,6 @@ int main(void)
     memset(di,0,sizeof(di));
     memset(iim,0,sizeof(iim));
     memset(dim,0,sizeof(dim));
-    memset(sp,0,sizeof(sp));
     PC=0;
 
     fseek(iimage , 0 , SEEK_END);
@@ -229,30 +228,39 @@ int main(void)
     unsigned char rd=0;
     unsigned char shamt=0;
     unsigned char funct=0;
-    unsigned short immediate=0;
+    short immediate=0;
     unsigned int address=0;
 
     int read=0;
     unsigned char *getting;
     getting = (unsigned char*)malloc(sizeof(unsigned char)*4);
     int flag=0;
-    i=1;
+    i=0;
+    int cycle=0;
     while(i<sins)
     {
         //printf("i:%d   ",i);
         op=(unsigned)iim[i]>>26;
         //printf("%x ",iim[i]);
         //printf("%x ",op);
-        printf("  PC:%x",PC);
+        fprintf(snapshot,"cycle %d\n",cycle);
+         for(j=0;j<32;j++)
+        {
+            fprintf(snapshot,"$%02d: 0x%08X\n",j,reg[j]);
+        }
+        fprintf(snapshot,"PC: 0x%08X\n",PC);
+
         switch(op)
         {
         case 0x00:
         {
             funct=cut_func(iim[i]);
+
             switch(funct)
             {
             case 0x20:
             {
+
                 rs=cut_rs(iim[i]);
                 rt=cut_rt(iim[i]);
                 rd=cut_rd(iim[i]);
@@ -362,6 +370,7 @@ int main(void)
             }
             case 0x08:
             {
+
                 rs=cut_rs(iim[i]);
                 PC=reg[rs];
                 break;
@@ -372,10 +381,12 @@ int main(void)
         }
         case 0x08:
         {
+
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            reg[rt]=reg[rs]+(int)immediate;      ///need overflow detect
+            reg[rt]=reg[rs]+immediate;      ///need overflow detect
+
             PC+=4;
             break;
         }
@@ -384,7 +395,7 @@ int main(void)
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            reg[rt]=reg[rs]+(int)immediate;
+            reg[rt]=reg[rs]+(unsigned)immediate;
             PC+=4;
             break;
         }
@@ -394,16 +405,11 @@ int main(void)
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            if(rs!=0x1D)                    ///if rs == sp then take from sp[]
-            {
-            read= reg[rs]+(int)immediate;  ///need overflow detect && data misaligned
-            reg[rt]=combine(dim[read],dim[read+1],dim[read+2],dim[read+3]);
-            }else
-            {
-                reg[rt]=sp[spn];
-                sp[spn]=0;
-                spn--;
-            }
+
+
+            read= reg[rs]+immediate;  ///need overflow detect && data misaligned
+            reg[rt]=(short)combine(dim[read],dim[read+1],dim[read+2],dim[read+3]);
+
             PC+=4;
             break;
         }
@@ -412,8 +418,8 @@ int main(void)
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            read= reg[rs]+(int)immediate;  ///need overflow detect && data misaligned
-            reg[rt]=combine_two(dim[read],dim[read+1]);
+            read= reg[rs]+immediate;  ///need overflow detect && data misaligned
+            reg[rt]=(char)combine_two(dim[read],dim[read+1]);
             PC+=4;
             break;
         }
@@ -422,8 +428,8 @@ int main(void)
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            read= reg[rs]+(int)immediate;  ///need overflow detect && data misaligned
-            reg[rt]=(unsigned)combine_two(dim[read],dim[read+1]);
+            read= reg[rs]+immediate;  ///need overflow detect && data misaligned
+            reg[rt]=combine_two(dim[read],dim[read+1]);
             PC+=4;
             break;
         }
@@ -432,8 +438,8 @@ int main(void)
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            read= reg[rs]+(int)immediate;  ///need overflow detect && data misaligned
-            reg[rt]=dim[read];
+            read= reg[rs]+immediate;  ///need overflow detect && data misaligned
+            reg[rt]=(char)dim[read];
             PC+=4;
             break;
         }
@@ -442,7 +448,7 @@ int main(void)
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            read= reg[rs]+(int)immediate;  ///need overflow detect && data misaligned
+            read= reg[rs]+immediate;  ///need overflow detect && data misaligned
             reg[rt]=(unsigned)dim[read];
             PC+=4;
             break;
@@ -452,19 +458,14 @@ int main(void)
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            if(rs!=0x1D)
-            {
+
                 getting=seperate(reg[rt]);
-                read= reg[rs]+(int)immediate;   ///need overflow detect && data misaligned
+                read= reg[rs]+immediate;   ///need overflow detect && data misaligned
                 dim[read]=getting[0];
                 dim[read+1]=getting[1];
                 dim[read+2]=getting[2];
                 dim[read+3]=getting[3];
-            }else
-            {
-                sp[spn]=reg[rt];
-                spn++;
-            }
+
             PC+=4;
             break;
         }
@@ -474,7 +475,7 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             getting=seperate_two(reg[rt]);
-            read= reg[rs]+(int)immediate;   ///need overflow detect && data misaligned
+            read= reg[rs]+immediate;   ///need overflow detect && data misaligned
             dim[read]=getting[0];
             dim[read+1]=getting[1];
             PC+=4;
@@ -504,7 +505,7 @@ int main(void)
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            reg[rt]=reg[rs]&immediate;
+            reg[rt]=reg[rs]&(unsigned)immediate;
             PC+=4;
             break;
         }
@@ -513,7 +514,7 @@ int main(void)
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            reg[rt]=reg[rs]|immediate;
+            reg[rt]=reg[rs]|(unsigned)immediate;
             PC+=4;
             break;
         }
@@ -522,7 +523,7 @@ int main(void)
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            reg[rt]=~(reg[rs]|immediate);
+            reg[rt]=~(reg[rs]|(unsigned)immediate);
             PC+=4;
             break;
         }
@@ -531,7 +532,7 @@ int main(void)
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
-            if(reg[rs]<(short)immediate) reg[rt]=1;
+            if(reg[rs]<immediate) reg[rt]=1;
             else reg[rt]=0;
             PC+=4;
             break;
@@ -543,7 +544,7 @@ int main(void)
             immediate=cut_immediate(iim[i]);
             if(reg[rs]==reg[rt])
             {
-                read=(int)immediate*4+4;        ///need overflow detect
+                read=immediate*4+4;        ///need overflow detect
                 PC+=read;
             }
             else PC+=4;
@@ -556,7 +557,7 @@ int main(void)
             immediate=cut_immediate(iim[i]);
             if(reg[rs]!=reg[rt])
             {
-                read=(int)immediate*4+4;        ///need overflow detect
+                read=immediate*4+4;        ///need overflow detect
                 PC+=read;
             }
             else PC+=4;
@@ -568,7 +569,7 @@ int main(void)
             immediate=cut_immediate(iim[i]);
             if(reg[rs]>0)
             {
-                read=(int)immediate*4+4;        ///need overflow detect
+                read=immediate*4+4;        ///need overflow detect
                 PC+=read;
             }
             else PC+=4;
@@ -577,7 +578,7 @@ int main(void)
         case 0x02:
         {
             address=cut_address(iim[i]);
-            address<<=2;
+            address=address<<2;
             PC+=4;
             PC=(unsigned)PC>>28;
             PC=PC<<28;
@@ -587,7 +588,7 @@ int main(void)
         case 0x03:
         {
             address=cut_address(iim[i]);
-            address<<=2;
+            address=address<<2;
             PC+=4;
             reg[31]=PC;
 
@@ -608,8 +609,9 @@ int main(void)
 
         i=(PC-PC_start)/4;
 
+        cycle++;
 
-        printf("\n");
+        fprintf(snapshot,"\n\n");
 
         free(getting);
         if(flag==1) break;
