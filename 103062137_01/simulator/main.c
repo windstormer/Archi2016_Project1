@@ -85,15 +85,6 @@ unsigned int cut_address(int a)
     return back;
 }
 
-int extend_immediate(unsigned short a)
-{
-    int x = (int)a;
-    x<<=16;
-    (unsigned)x>>16;
-
-    return (int)x;
-}
-
 
 int combine(unsigned char a,unsigned char b,unsigned char c,unsigned char d)
 {
@@ -171,7 +162,6 @@ int main(void)
 
     long sdimage=0,siimage=0;
     int sdata=0,sins=0;
-    int spn=0;
     int i,j;
 
     memset(reg,0,sizeof(reg));

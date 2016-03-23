@@ -3,7 +3,7 @@ SRCS = ./*.c
 OBS = ./*.o
 
 
-single_cycle: SRC
+main: SRC
 	$(CC) -o $@ $(OBS)
 
 SRC: $(SRCS)
@@ -11,12 +11,3 @@ SRC: $(SRCS)
 
 clean: $(OBS)
 	rm $(OBS) single_cycle
-~
-~
-~
-~
-~
-~
-~
-~
-~
