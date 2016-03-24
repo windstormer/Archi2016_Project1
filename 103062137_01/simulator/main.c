@@ -671,7 +671,7 @@ int main(void)
 
         fprintf(snapshot,"\n\n");
 
-        free(getting);
+      
         if(flag==1) break;
     }
 
