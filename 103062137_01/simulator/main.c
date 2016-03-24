@@ -17,8 +17,8 @@ int main(void)
 {
     FILE *iimage = fopen("../../archiTA/testcase/open_testcase/error2/iimage.bin","rb");
     FILE *dimage = fopen("../../archiTA/testcase/open_testcase/error2/dimage.bin","rb");
-    FILE *error = fopen("errormessage.rpt","w");
-    FILE *snapshot = fopen("snap.rpt","w");
+    FILE *error = fopen("./error_dump.rpt","w");
+    FILE *snapshot = fopen("./snapshot.rpt","w");
 
 
 
