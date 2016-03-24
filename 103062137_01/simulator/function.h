@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 
 int overflow_detect(int ans,int a,int b);
 unsigned char cut_rs(int a);

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <function.h>
+#include "function.h"
 
 
 
@@ -17,8 +17,8 @@ int main(void)
 {
     FILE *iimage = fopen("../../archiTA/testcase/open_testcase/error2/iimage.bin","rb");
     FILE *dimage = fopen("../../archiTA/testcase/open_testcase/error2/dimage.bin","rb");
-    FILE *error = fopen("../../archiTA/testcase/open_testcase/error2/errormessage.rpt","w");
-    FILE *snapshot = fopen("../../archiTA/testcase/open_testcase/error2/snap.rpt","w");
+    FILE *error = fopen("errormessage.rpt","w");
+    FILE *snapshot = fopen("snap.rpt","w");
 
 
 
