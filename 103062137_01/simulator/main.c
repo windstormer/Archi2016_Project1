@@ -94,13 +94,16 @@ int main(void)
     unsigned int address=0;
 
     int read=0;
+    int errors[4];
     unsigned char *getting;
     getting = (unsigned char*)malloc(sizeof(unsigned char)*4);
     int flag=0;
+
     i=0;
     int cycle=0;
     while(i<sins)
     {
+        memset(errors,0,sizeof(errors));
         //printf("i:%d   ",i);
         op=(unsigned)iim[i]>>26;
         //printf("%x ",iim[i]);
@@ -127,11 +130,12 @@ int main(void)
                 rt=cut_rt(iim[i]);
                 rd=cut_rd(iim[i]);
                 if(rd==0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
 
                 reg[rd]=reg[rs]+reg[rt];    ///need overflow detect
+
                 if(overflow_detect(reg[rd],reg[rs],reg[rt]))
-                    fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
+                    errors[1]=1;
                 if(rd==0)
                     reg[rd]=0;
                 PC+=4;
@@ -143,7 +147,7 @@ int main(void)
                 rt=cut_rt(iim[i]);
                 rd=cut_rd(iim[i]);
                 if(rd==0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
                 reg[rd]=reg[rs]+reg[rt];
                 if(rd==0)
                     reg[rd]=0;
@@ -156,11 +160,11 @@ int main(void)
                 rt=cut_rt(iim[i]);
                 rd=cut_rd(iim[i]);
                 if(rd==0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
                 reg[rd]=reg[rs]+(-1)*reg[rt];
 
                 if(overflow_detect(reg[rd],reg[rs],(-1)*reg[rt]))
-                    fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
+                    errors[1]=1;
                 if(rd==0)
                     reg[rd]=0;
                 PC+=4;
@@ -172,7 +176,7 @@ int main(void)
                 rt=cut_rt(iim[i]);
                 rd=cut_rd(iim[i]);
                 if(rd==0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
                 else
                 reg[rd]=reg[rs]&reg[rt];
                 PC+=4;
@@ -184,7 +188,7 @@ int main(void)
                 rt=cut_rt(iim[i]);
                 rd=cut_rd(iim[i]);
                 if(rd==0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
                 else
                 reg[rd]=reg[rs]|reg[rt];
                 PC+=4;
@@ -196,7 +200,7 @@ int main(void)
                 rt=cut_rt(iim[i]);
                 rd=cut_rd(iim[i]);
                 if(rd==0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
                 else
                 reg[rd]=reg[rs]^reg[rt];
                 PC+=4;
@@ -208,7 +212,7 @@ int main(void)
                 rt=cut_rt(iim[i]);
                 rd=cut_rd(iim[i]);
                 if(rd==0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
                 else
                 reg[rd]=~(reg[rs]|reg[rt]);
                 PC+=4;
@@ -220,7 +224,7 @@ int main(void)
                 rt=cut_rt(iim[i]);
                 rd=cut_rd(iim[i]);
                 if(rd==0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
                 else
                 reg[rd]=~(reg[rs]&reg[rt]);
                 PC+=4;
@@ -232,7 +236,7 @@ int main(void)
                 rt=cut_rt(iim[i]);
                 rd=cut_rd(iim[i]);
                 if(rd==0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
                 else
                 {
                      if(reg[rs]<reg[rt])reg[rd]=1;
@@ -248,7 +252,7 @@ int main(void)
                 rd=cut_rd(iim[i]);
                 shamt=cut_shamt(iim[i]);
                 if(rd==0 && shamt!=0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
                 else
                 reg[rd]=reg[rt]<<shamt;
                 PC+=4;
@@ -260,7 +264,7 @@ int main(void)
                 rd=cut_rd(iim[i]);
                 shamt=cut_shamt(iim[i]);
                 if(rd==0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
                 else
                 reg[rd]=(unsigned)reg[rt]>>shamt;
                 PC+=4;
@@ -272,7 +276,7 @@ int main(void)
                 rd=cut_rd(iim[i]);
                 shamt=cut_shamt(iim[i]);
                 if(rd==0)
-                    fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                    errors[0]=1;
                 else
                 reg[rd]=reg[rt]>>shamt;
                 PC+=4;
@@ -296,11 +300,11 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
             reg[rt]=reg[rs]+immediate;      ///need overflow detect
 
             if(overflow_detect(read,reg[rs],(int)immediate))
-                    fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
+                    errors[1]=1;
             if(rt==0)
                     reg[rt]=0;
             PC+=4;
@@ -312,7 +316,7 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
             else
             reg[rt]=reg[rs]+(unsigned)immediate;
             PC+=4;
@@ -325,23 +329,25 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
 
                  read= reg[rs]+immediate;  ///need overflow detect && data misaligned
             if(overflow_detect(read,reg[rs],(int)immediate))
-                    fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
-            if(read>=1021)
+                    errors[1]=1;
+            if(read>=1021 || read<0)
             {
-                    fprintf(error,"In cycle %d: Address Overflow\n",cycle+1);
+                    errors[2]=1;
                     flag=1;
-                    break;
+
             }
             if(read%4!=0)
             {
-                fprintf(error,"In cycle %d: Misalignment Error\n",cycle+1);
+                errors[3]=1;
                 flag=1;
-                break;
+
             }
+            if(flag==1)
+                break;
             reg[rt]=(int)combine(dim[read],dim[read+1],dim[read+2],dim[read+3]);
 
             if(rt==0)
@@ -357,22 +363,23 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
               read= reg[rs]+immediate;  ///need overflow detect && data misaligned
             if(overflow_detect(read,reg[rs],(int)immediate))
-                    fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
-            if(read>=1023)
+                    errors[1]=1;
+            if(read>=1023 || read<0)
             {
-                    fprintf(error,"In cycle %d: Address Overflow\n",cycle+1);
+                    errors[2]=1;
                     flag=1;
-                    break;
+
             }
             if(read%2!=0)
             {
-                fprintf(error,"In cycle %d: Misalignment Error\n",cycle+1);
+                errors[3]=1;
                 flag=1;
-                break;
+
             }
+            if(flag==1)break;
             reg[rt]=(short)combine_two(dim[read],dim[read+1]);
             if(rt==0)
                 reg[rt]=0;
@@ -386,23 +393,24 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
 
                read= reg[rs]+immediate;  ///need overflow detect && data misaligned
             if(overflow_detect(read,reg[rs],(int)immediate))
-                fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
-            if(read>=1023)
+                errors[1]=1;
+            if(read>=1023 || read <0)
             {
-                    fprintf(error,"In cycle %d: Address Overflow\n",cycle+1);
+                    errors[2]=1;
                     flag=1;
-                    break;
+
             }
             if(read%2!=0)
             {
-                fprintf(error,"In cycle %d: Misalignment Error\n",cycle+1);
+                errors[3]=1;
                 flag=1;
-                break;
+
             }
+            if(flag==1)break;
             reg[rt]=combine_two(dim[read],dim[read+1]);
             if(rt==0)
                 reg[rt]=0;
@@ -416,17 +424,18 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
 
                read= reg[rs]+immediate;  ///need overflow detect && data misaligned
             if(overflow_detect(read,reg[rs],(int)immediate))
-                fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
-            if(read>=1024)
+                errors[1]=1;
+            if(read>=1024 || read<0)
             {
-                    fprintf(error,"In cycle %d: Address Overflow\n",cycle+1);
+                    errors[2]=1;
                     flag=1;
-                    break;
+
             }
+            if(flag==1)break;
             reg[rt]=(char)dim[read];
             if(rt==0)
                 reg[rt]=0;
@@ -440,17 +449,18 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
 
               read= reg[rs]+immediate;  ///need overflow detect && data misaligned
             if(overflow_detect(read,reg[rs],(int)immediate))
-                fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
-            if(read>=1024)
+                errors[1]=1;
+            if(read>=1024 || read<0)
             {
-                    fprintf(error,"In cycle %d: Address Overflow\n",cycle+1);
+                    errors[2]=1;
                     flag=1;
-                    break;
+
             }
+            if(flag==1)break;
             reg[rt]=(unsigned)dim[read];
             if(rt==0)
                 reg[rt]=0;
@@ -467,19 +477,20 @@ int main(void)
                 getting=seperate(reg[rt]);
                 read= reg[rs]+immediate;   ///need overflow detect && data misaligned
                 if(overflow_detect(read,reg[rs],(int)immediate))
-                    fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
-                    if(read>=1021)
+                    errors[1]=1;
+                    if(read>=1021 || read<0)
             {
-                    fprintf(error,"In cycle %d: Address Overflow\n",cycle+1);
+                    errors[2]=1;
                     flag=1;
-                    break;
+
             }
             if(read%4!=0)
             {
-                fprintf(error,"In cycle %d: Misalignment Error\n",cycle+1);
+                errors[3]=1;
                 flag=1;
-                break;
+
             }
+            if(flag==1)break;
                 dim[read]=getting[0];
                 dim[read+1]=getting[1];
                 dim[read+2]=getting[2];
@@ -496,19 +507,20 @@ int main(void)
             getting=seperate_two(reg[rt]);
             read= reg[rs]+immediate;   ///need overflow detect && data misaligned
             if(overflow_detect(read,reg[rs],(int)immediate))
-                fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
-                if(read>=1023)
+                errors[1]=1;
+                if(read>=1023 || read<0)
             {
-                    fprintf(error,"In cycle %d: Address Overflow\n",cycle+1);
+                    errors[2]=1;
                     flag=1;
-                    break;
+
             }
             if(read%2!=0)
             {
-                fprintf(error,"In cycle %d: Misalignment Error\n",cycle+1);
+                errors[3]=1;
                 flag=1;
-                break;
+
             }
+            if(flag==1)break;
             dim[read]=getting[0];
             dim[read+1]=getting[1];
             PC+=4;
@@ -522,13 +534,14 @@ int main(void)
             getting[0]=(unsigned char)(reg[rt]&0x000000FF);
             read= reg[rs]+immediate;   ///need overflow detect && data misaligned
             if(overflow_detect(read,reg[rs],(int)immediate))
-                fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
-                if(read>=1024)
+                errors[1]=1;
+                if(read>=1024 || read<0)
             {
-                    fprintf(error,"In cycle %d: Address Overflow\n",cycle+1);
+                    errors[2]=1;
                     flag=1;
-                    break;
+
             }
+            if(flag==1)break;
             dim[read]=getting[0];
             PC+=4;
             break;
@@ -538,7 +551,7 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
             else
             reg[rt]=immediate<<16;
             PC+=4;
@@ -550,7 +563,7 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
             else
             reg[rt]=reg[rs]&(unsigned)immediate;
             PC+=4;
@@ -562,7 +575,7 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
             else
             reg[rt]=reg[rs]|(unsigned)immediate;
             PC+=4;
@@ -574,7 +587,7 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
             else
             reg[rt]=~(reg[rs]|(unsigned)immediate);
             PC+=4;
@@ -586,7 +599,7 @@ int main(void)
             rt=cut_rt(iim[i]);
             immediate=cut_immediate(iim[i]);
             if(rt==0)
-                fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+                errors[0]=1;
             else
             {
               if(reg[rs]<immediate) reg[rt]=1;
@@ -605,7 +618,7 @@ int main(void)
             {
                 read=immediate*4+4;        ///need overflow detect
                 if(overflow_detect(read,immediate*4,4))
-                    fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
+                    errors[1]=1;
                 PC+=read;
             }
             else PC+=4;
@@ -620,7 +633,7 @@ int main(void)
             {
                 read=immediate*4+4;        ///need overflow detect
                 if(overflow_detect(read,immediate*4,4))
-                    fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
+                    errors[1]=1;
                 PC+=read;
             }
             else PC+=4;
@@ -634,7 +647,7 @@ int main(void)
             {
                 read=immediate*4+4;        ///need overflow detect
                 if(overflow_detect(read,immediate*4,4))
-                    fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
+                    errors[1]=1;
                 PC+=read;
             }
             else PC+=4;
@@ -671,6 +684,10 @@ int main(void)
 
 
         }
+        if(errors[0]==1)fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
+        if(errors[1]==1)fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
+        if(errors[2]==1)fprintf(error,"In cycle %d: Address Overflow\n",cycle+1);
+        if(errors[3]==1)fprintf(error,"In cycle %d: Misalignment Error\n",cycle+1);
 
         i=(PC-PC_start)/4;
 
