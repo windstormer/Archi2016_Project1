@@ -3,7 +3,7 @@ SRCS = ./*.c
 OBS = ./*.o
 
 
-main: SRC
+single_cycle: SRC
 	$(CC) -o $@ $(OBS)
 
 SRC: $(SRCS)

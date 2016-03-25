@@ -155,8 +155,8 @@ int main(void)
                 if(rd==0)
                     fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
                 else
-                reg[rd]=reg[rs]-reg[rt];
-                if(overflow_detect(reg[rd],reg[rs],reg[rt]))
+                reg[rd]=reg[rs]+(-1)*reg[rt];
+                if(overflow_detect(reg[rd],reg[rs],(-1)*reg[rt]))
                     fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
                 PC+=4;
                 break;
