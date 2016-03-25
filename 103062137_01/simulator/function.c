@@ -5,13 +5,18 @@ int overflow_detect(int ans,int a,int b)
 {
 
 
+    if((a>0&&b>0&&ans<0)||(a<0&&b<0&&ans>0))
+        return 1;
+    else return 0;
+
+/*
   int x=a>>31;
   int y=b>>31;
   int z=ans>>31;
   if(x==y &&x!=z)
     return 1;
   else return 0;
-
+*/
 }
 unsigned char cut_rs(int a)
 {

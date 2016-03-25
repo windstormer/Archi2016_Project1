@@ -12,6 +12,7 @@ unsigned char ii[1024];
 unsigned char di[1024];
 int iim[256];
 unsigned char dim[1024];
+int temp;
 
 int main(void)
 {
@@ -131,11 +132,10 @@ int main(void)
                 rd=cut_rd(iim[i]);
                 if(rd==0)
                     errors[0]=1;
-
-                reg[rd]=reg[rs]+reg[rt];    ///need overflow detect
-
-                if(overflow_detect(reg[rd],reg[rs],reg[rt]))
+                temp=reg[rs]+reg[rt];
+                if(overflow_detect(temp,reg[rs],reg[rt]))
                     errors[1]=1;
+                reg[rd]=reg[rs]+reg[rt];    ///need overflow detect
                 if(rd==0)
                     reg[rd]=0;
                 PC+=4;
@@ -161,10 +161,11 @@ int main(void)
                 rd=cut_rd(iim[i]);
                 if(rd==0)
                     errors[0]=1;
-                reg[rd]=reg[rs]+(-1)*reg[rt];
+                temp=reg[rs]+(-1)*reg[rt];
 
-                if(overflow_detect(reg[rd],reg[rs],(-1)*reg[rt]))
+                if(overflow_detect(temp,reg[rs],(-1)*reg[rt]))
                     errors[1]=1;
+                reg[rd]=reg[rs]+(-1)*reg[rt];
                 if(rd==0)
                     reg[rd]=0;
                 PC+=4;
@@ -301,10 +302,12 @@ int main(void)
             immediate=cut_immediate(iim[i]);
             if(rt==0)
                 errors[0]=1;
-            reg[rt]=reg[rs]+immediate;      ///need overflow detect
+                temp=reg[rs]+immediate;
 
-            if(overflow_detect(read,reg[rs],(int)immediate))
+
+            if(overflow_detect(temp,reg[rs],(int)immediate))
                     errors[1]=1;
+            reg[rt]=reg[rs]+immediate;      ///need overflow detect
             if(rt==0)
                     reg[rt]=0;
             PC+=4;
