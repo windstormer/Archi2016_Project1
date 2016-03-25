@@ -76,10 +76,10 @@ unsigned int cut_address(int a)
 }
 
 
-int combine(unsigned char a,unsigned char b,unsigned char c,unsigned char d)
+unsigned int combine(unsigned char a,unsigned char b,unsigned char c,unsigned char d)
 {
 
-    int back=0;
+    unsigned int back=0;
     back |= a;
     back <<= 8;
     back |= b;

@@ -15,8 +15,8 @@ unsigned char dim[1024];
 
 int main(void)
 {
-    FILE *iimage = fopen("../../archiTA/testcase/open_testcase/error2/iimage.bin","rb");
-    FILE *dimage = fopen("../../archiTA/testcase/open_testcase/error2/dimage.bin","rb");
+    FILE *iimage = fopen("./iimage.bin","rb");
+    FILE *dimage = fopen("./dimage.bin","rb");
     FILE *error = fopen("./error_dump.rpt","w");
     FILE *snapshot = fopen("./snapshot.rpt","w");
 
@@ -130,7 +130,8 @@ int main(void)
                     fprintf(error,"In cycle %d: Write $0 Error\n",cycle+1);
                 else
                 reg[rd]=reg[rs]+reg[rt];    ///need overflow detect
-                if(overflow_detect(reg[rd],reg[rs],reg[rt]))
+                read=reg[rs]+reg[rt];
+                if(overflow_detect(read,reg[rs],reg[rt]))
                     fprintf(error,"In cycle %d: Number Overflow\n",cycle+1);
                 PC+=4;
                 break;
@@ -336,7 +337,7 @@ int main(void)
                 flag=1;
                 break;
             }
-            reg[rt]=(short)combine(dim[read],dim[read+1],dim[read+2],dim[read+3]);
+            reg[rt]=(int)combine(dim[read],dim[read+1],dim[read+2],dim[read+3]);
             }
 
 
@@ -367,7 +368,7 @@ int main(void)
                 flag=1;
                 break;
             }
-            reg[rt]=(char)combine_two(dim[read],dim[read+1]);
+            reg[rt]=(short)combine_two(dim[read],dim[read+1]);
             }
 
             PC+=4;
@@ -657,7 +658,7 @@ int main(void)
         }
         case 0x3F:
         {
-            printf("halt\n");
+          //  printf("halt\n");
             flag=1;
             break;
         }
@@ -671,7 +672,7 @@ int main(void)
 
         fprintf(snapshot,"\n\n");
 
-      
+
         if(flag==1) break;
     }
 
