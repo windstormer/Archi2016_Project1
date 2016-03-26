@@ -5,7 +5,7 @@ int overflow_detect(int ans,int a,int b)
 {
 
 
-    if((a>0&&b>0&&ans<0)||(a<0&&b<0&&ans>0))
+    if((a>0&&b>0&&ans<=0)||(a<0&&b<0&&ans>=0))
         return 1;
     else return 0;
 
@@ -68,6 +68,16 @@ short cut_immediate(int a)
     short back;
     a<<=16;
     back=a>>16;
+
+    //printf("%x ",back);
+    return back;
+}
+
+unsigned short cut_immediate_unsigned(int a)
+{
+    unsigned short back;
+    a<<=16;
+    back=(unsigned)a>>16;
 
     //printf("%x ",back);
     return back;

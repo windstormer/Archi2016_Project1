@@ -92,6 +92,7 @@ int main(void)
     unsigned char shamt=0;
     unsigned char funct=0;
     short immediate=0;
+    unsigned short unsigned_immediate=0;
     unsigned int address=0;
 
     int read=0;
@@ -116,6 +117,7 @@ int main(void)
         }
         fprintf(snapshot,"PC: 0x%08X\n",PC);
 
+
         switch(op)
         {
         case 0x00:
@@ -132,6 +134,7 @@ int main(void)
                 rd=cut_rd(iim[i]);
                 if(rd==0)
                     errors[0]=1;
+
                 temp=reg[rs]+reg[rt];
                 if(overflow_detect(temp,reg[rs],reg[rt]))
                     errors[1]=1;
@@ -317,11 +320,11 @@ int main(void)
         {
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
-            immediate=cut_immediate(iim[i]);
+            unsigned_immediate=cut_immediate_unsigned(iim[i]);
             if(rt==0)
                 errors[0]=1;
             else
-            reg[rt]=reg[rs]+(unsigned)immediate;
+            reg[rt]=reg[rs]+unsigned_immediate;
             PC+=4;
             break;
         }
@@ -564,23 +567,26 @@ int main(void)
         {
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
-            immediate=cut_immediate(iim[i]);
+            unsigned_immediate=cut_immediate_unsigned(iim[i]);
             if(rt==0)
                 errors[0]=1;
             else
-            reg[rt]=reg[rs]&(unsigned)immediate;
+            reg[rt]=reg[rs]&unsigned_immediate;
             PC+=4;
             break;
         }
         case 0x0D:
         {
+
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
-            immediate=cut_immediate(iim[i]);
+            unsigned_immediate=cut_immediate_unsigned(iim[i]);
+
             if(rt==0)
                 errors[0]=1;
             else
-            reg[rt]=reg[rs]|(unsigned)immediate;
+            reg[rt]=(reg[rs]|unsigned_immediate);
+
             PC+=4;
             break;
         }
@@ -588,11 +594,11 @@ int main(void)
         {
             rs=cut_rs(iim[i]);
             rt=cut_rt(iim[i]);
-            immediate=cut_immediate(iim[i]);
+            unsigned_immediate=cut_immediate_unsigned(iim[i]);
             if(rt==0)
                 errors[0]=1;
             else
-            reg[rt]=~(reg[rs]|(unsigned)immediate);
+            reg[rt]=~(reg[rs]|unsigned_immediate);
             PC+=4;
             break;
         }
