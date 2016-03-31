@@ -23,10 +23,10 @@ int main(void)
 
 
 
-    long sdimage=0,siimage=0;
+
     int sdata=0,sins=0;
     int i,j;
-    int test=0;
+
 
     memset(reg,0,sizeof(reg));
     memset(ii,0,sizeof(ii));
@@ -37,14 +37,14 @@ int main(void)
 
     fseek(iimage , 0 , SEEK_END);
 
-    siimage = ftell (iimage);
+
     rewind (iimage);
 
     fread(ii,sizeof(unsigned char),8,iimage);
 
     fseek(dimage , 0 , SEEK_END);
 
-    sdimage = ftell (dimage);
+
     rewind (dimage);
 
     fread(di,sizeof(unsigned char),8,dimage);
