@@ -18,8 +18,8 @@ int main(void)
 {
     FILE *iimage = fopen("./iimage.bin","rb");
     FILE *dimage = fopen("./dimage.bin","rb");
-    FILE *error = fopen("./error_dump1.rpt","w");
-    FILE *snapshot = fopen("./snapshot1.rpt","w");
+    FILE *error = fopen("./error_dump.rpt","w");
+    FILE *snapshot = fopen("./snapshot.rpt","w");
 
 
 
